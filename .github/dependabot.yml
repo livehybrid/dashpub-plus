@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directories:
+      - "/"
+      - "/apicache"
+      - "/screenshotter"
+    schedule:
+      interval: "daily"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "/apicache"
+      - "/screenshotter"
+    schedule:
+      interval: "daily"
