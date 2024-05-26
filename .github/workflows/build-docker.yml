@@ -59,6 +59,16 @@ jobs:
   scan:
     name: Trivy Scan
     runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./apicache/Dockerfile
+            image: livehybrid/dashpub_cacheapi
+            image_url: index.docker.io/livehybrid/dashpub_cacheapi
+          - dockerfile: ./screenshotter/Dockerfile
+            image: livehybrid/dashpub_screenshotter
+            image_url: index.docker.io/livehybrid/dashpub_screenshotter
     needs: push_to_registry
     steps:
       - name: Run Trivy vulnerability scanner
