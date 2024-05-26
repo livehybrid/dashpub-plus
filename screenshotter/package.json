@@ -10,6 +10,6 @@
     "chrome-aws-lambda": "10.1.0",
     "chromium": "^3.0.3",
     "puppeteer": "^21.6.1",
-    "puppeteer-core": "^10.1.0"
+    "puppeteer-core": "^22.10.0"
   }
 }
