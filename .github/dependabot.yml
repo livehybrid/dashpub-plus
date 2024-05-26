@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directories:
+      - "/"
+      - "/apicache"
+      - "/screenshotter"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "/apicache"
+      - "/screenshotter"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    target-branch: "develop"

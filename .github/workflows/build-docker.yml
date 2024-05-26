@@ -1,0 +1,72 @@
+name: Publish Docker image
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./apicache/Dockerfile
+            image: livehybrid/dashpub_cacheapi
+            image_url: index.docker.io/livehybrid/dashpub_cacheapi
+          - dockerfile: ./screenshotter/Dockerfile
+            image: livehybrid/dashpub_screenshotter
+            image_url: index.docker.io/livehybrid/dashpub_screenshotter
+    permissions:
+      packages: write
+      contents: read
+#      attestations: write
+      id-token: write
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@f7b4ed12385588c3f9bc252f0a2b520d83b52d48
+        with:
+          images: ${{ matrix.image }}
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@2cdde995de11925a030ce8070c3d77a52ffcf1c0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+
+ #     - name: Generate artifact attestation
+ #       uses: actions/attest-build-provenance@v1
+ #       with:
+ #         subject-name: ${{ matrix.image_url }}
+ #         subject-digest: ${{ steps.push.outputs.digest }}
+ #         push-to-registry: true
+  scan:
+    name: Trivy Scan
+    runs-on: ubuntu-20.04
+    needs: push_to_registry
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ matrix.image }}
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
