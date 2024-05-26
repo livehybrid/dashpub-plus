@@ -3,6 +3,13 @@ updates:
   - package-ecosystem: "pip"
     directories:
       - "/apicache"
+    schedule:
+      interval: "daily"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    
+  - package-ecosystem: "npm"
+    directories:
       - "/screenshotter"
     schedule:
       interval: "daily"
