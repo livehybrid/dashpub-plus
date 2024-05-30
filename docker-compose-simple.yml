@@ -1,0 +1,44 @@
+version: "3.6"
+services:
+  app:
+    image: livehybrid/dashpub_cacheapi:latest
+    environment:
+      DASHPUB_HOST: dashpub
+      REDIS_HOST: redis-node-0
+      REDIS_PASS: TestPassword1
+      REDIS_SSL: "False"
+      REDIS_USER: dashpub
+    stdin_open: true
+    tty: true
+    links:
+      - redis-node-0:redis-node-0
+      - dashpub:dashpub
+    labels:
+      io.rancher.container.pull_image: always
+
+  dashpub:
+    image: livehybrid/splunk-dashpub:latest
+    ports:
+      - 3000
+    environment:
+      - DASHPUB_APP=search # This is where our dashboards are located
+      - DASHPUB_BRANCH=develop
+      - DASHPUB_DASHBOARDS=example[Demo|Example] #dashboardName[Tag1|Tag2],dashboardName2[Tag2,Tag3]
+      - REDIS_PASS=TestPassword1
+      - DASHPUB_FOLDERNAME=app # Leave this to 'app'
+      - DASHPUB_PROJECTNAME=app # Leave this to 'app'
+      - NODE_TLS_REJECT_UNAUTHORIZED=0 #This is required to allow dashpub to talk to local Splunk instance with self-signed certs
+      - SPLUNKD_TOKEN #Use preset env variable
+      - DASHPUB_VERCEL="false" # Do not setup as vercel service
+      - SPLUNKD_URL=https://splunk:8089
+      - SPLUNKD_USER=admin
+    stdin_open: true
+    tty: true
+
+  redis-node-0:
+    image: docker.io/bitnami/redis-cluster:7.2.5@sha256:1212402afa3f991a27322e3d7540acf6d56b13497311d4364e1bfc2c1b34884b
+    environment:
+      REDIS_NODES: redis-node-0
+      REDIS_PASSWORD: TestPassword1
+    stdin_open: true
+    tty: true

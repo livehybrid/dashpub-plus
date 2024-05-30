@@ -1,0 +1,17 @@
+version: "3.6"
+services:
+  app:
+    build:
+      dockerfile: ./apicache/Dockerfile
+
+  # dashpub:
+  #   image:
+  #     build: ./dashpub/docker/Dockerfile
+
+  nginx:
+    build:
+      dockerfile: ./nginx/Dockerfile
+
+  screenshotter:
+    build:
+      dockerfile: ./screenshotter/Dockerfile

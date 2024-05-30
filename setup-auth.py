@@ -70,6 +70,6 @@ if __name__ == "__main__":
 
         # Create and return new token
         token = create_splunk_token(session_key)
-        print(f"New token created: {token}")
+        print(f"New token created: {token[:8]}...")
     except Exception as e:
         print(str(e))
