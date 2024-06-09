@@ -15,7 +15,11 @@ services:
       - dashpub:dashpub
     labels:
       io.rancher.container.pull_image: always
-
+  nginx:
+    image: nginx:mainline-perl
+    stdin_open: true
+    ports:
+      - 3001
   dashpub:
     image: livehybrid/splunk-dashpub:latest
     ports:
@@ -30,7 +34,7 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0 #This is required to allow dashpub to talk to local Splunk instance with self-signed certs
       - SPLUNKD_TOKEN #Use preset env variable
       - DASHPUB_VERCEL="false" # Do not setup as vercel service
-      - SPLUNKD_URL=https://splunk:8089
+      - SPLUNKD_URL
       - SPLUNKD_USER=admin
     stdin_open: true
     tty: true

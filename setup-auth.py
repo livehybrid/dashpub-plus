@@ -3,9 +3,9 @@ import json
 import os
 
 # Constants
-SPLUNK_HOST = f"""https://{os.getenv("SPLUNK_URL","127.0.0.1:8089")}"""
-SPLUNK_USERNAME = os.getenv("SPLUNK_USER", "admin")
-SPLUNK_PASSWORD = os.getenv("SPLUNK_PASSWORD", "Chang3d!")
+SPLUNK_HOST = os.getenv("SPLUNKD_URL", "https://127.0.0.1:8089")
+SPLUNK_USERNAME = os.getenv("SPLUNKD_USER", "admin")
+SPLUNK_PASSWORD = os.getenv("SPLUNKD_PASSWORD", "Chang3d!")
 
 # Disable SSL warnings
 requests.packages.urllib3.disable_warnings()
