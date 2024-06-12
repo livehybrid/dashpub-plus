@@ -1,0 +1,37 @@
+version: "3.6"
+
+networks:
+  default:
+    name: global
+    external: true
+
+services:
+  splunk:
+    networks:
+      default:
+        aliases:
+          - splunk
+    image: ${SPLUNK_IMAGE:-splunk/splunk:latest}
+    platform: linux/amd64
+    command: start
+    hostname: splunk
+    container_name: splunk
+    volumes:
+      - ./splunk/dashboards:/opt/splunk/etc/apps/search/local/data/ui/views/
+    labels:
+      - traefik.http.routers.splunk-http.rule=Host(`splunk.mac.splunk.engineer`)
+      - traefik.http.routers.splunk-http.entrypoints=http
+      - traefik.http.routers.splunk-https.rule=Host(`splunk.mac.splunk.engineer`)
+      - traefik.http.routers.splunk-https.entrypoints=https
+      - traefik.http.routers.splunk-https.tls=true
+      - traefik.http.middlewares.testHeader.headers.customrequestheaders.X-Forwarded-Proto=https"
+    environment:
+      - SPLUNK_START_ARGS=--accept-license
+      - SPLUNK_STANDALONE_URL=splunk
+      - SPLUNK_ROLE=splunk_standalone
+      - SPLUNK_LICENSE_URI
+      - DEBUG=true
+      - SPLUNK_PASSWORD
+    ports:
+      - 8000
+      - 8089

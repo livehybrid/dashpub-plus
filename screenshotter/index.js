@@ -1,4 +1,5 @@
-const chromium = require('chrome-aws-lambda');
+const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer-core");
 //const fetch = require('node-fetch');
 const https = require('https');
 const fs = require("fs");
@@ -7,8 +8,8 @@ var url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
 
 (async () => {
     let browser = "";
-    const executablePath = await chromium.executablePath
-    browser = await chromium.puppeteer.launch({
+    const executablePath = await chromium.executablePath()
+    browser = await puppeteer.launch({
         args: [      '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-dev-shm-usage',
