@@ -21,7 +21,7 @@ services:
   dashpub:
     image: livehybrid/splunk-dashpub:latest
     environment:
-      - DASHPUB_APP=etyd
+      - DASHPUB_APP=search
       - DASHPUB_BRANCH=develop
       - DASHPUB_BUILD_ID="1"
       #      - DASHPUB_CUSTOM_DEPS='[{"@react-google-maps/api"="^2.19.2"},{"react-icons":"*"}]'
@@ -44,8 +44,9 @@ services:
       - NODE_TLS_REJECT_UNAUTHORIZED=0
       - SPLUNKD_TOKEN
       - SPLUNKD_URL
-      - SPLUNKD_USER=admin
+      - SPLUNKD_USER
       - VERCEL_URL=localhost
+      - ENV_MODE
     stdin_open: true
     #volumes:
     #      - /home/rancher/dashboard_publishing_livehybrid/mapping/src/custom_components/:/custom_components

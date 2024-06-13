@@ -5,6 +5,7 @@ export DOCKER_COMPOSE_BUILD_OPTION=$([ "$BUILD_IMAGES" = "true" ] && echo "--fil
 export DASHPUB_ARCH=${DASHPUB_ARCH:-"main"}
 export DASHPUB_ARCH_FILENAME="-$DASHPUB_ARCH"
 export SPLUNKD_URL=${SPLUNKD_URL:-"https://splunk:8089"}
+export SPLUNK_PASSWORD=$SPLUNKD_PASSWORD
 
 # Include the Splunk file if using the docker splunk instance, else do not.
 DOCKER_COMPOSE_SPLUNKFILE=$([ "$SPLUNKD_URL" = "https://splunk:8089" ] && echo "--file docker-compose-splunk.yml" || echo "")
@@ -18,7 +19,6 @@ if [ "$SPLUNKD_URL" = "https://splunk:8089" ]; then
         echo .
         sleep 5
     done
-    export SPLUNKD_URL=https://$(docker compose --file docker-compose-splunk.yml port splunk 8089)
     export SPLUNKD_USERNAME=admin
 else 
     echo "Not starting Splunk docker container as using external instance: $SPLUNKD_URL"
@@ -26,7 +26,7 @@ fi
 
 if [ -z "$SPLUNKD_TOKEN" ]; then
     echo "No SPLUNKD_TOKEN variable set so creating using SPLUNKD_USERNAME and SPLUNKD_PASSWORD variables against $SPLUNKD_URL"
-    python3 setup-auth.py
+    SPLUNKD_URL=https://$(docker compose --file docker-compose-splunk.yml port splunk 8089) python3 setup-auth.py
 fi
 
 docker compose --env-file .tokenenv --file docker-compose$DASHPUB_ARCH_FILENAME.yml $DOCKER_COMPOSE_SPLUNKFILE $DOCKER_COMPOSE_BUILD_OPTION
