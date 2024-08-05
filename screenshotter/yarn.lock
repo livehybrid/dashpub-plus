@@ -21,29 +21,29 @@
     chalk "^2.4.2"
     js-tokens "^4.0.0"
 
-"@puppeteer/browsers@2.2.3":
-  version "2.2.3"
-  resolved "https://registry.npmjs.org/@puppeteer/browsers/-/browsers-2.2.3.tgz"
+"@puppeteer/browsers@2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@puppeteer/browsers/-/browsers-2.3.0.tgz#791ea7d80450fea24eb19fb1d70c367ad4e08cae"
   dependencies:
-    debug "4.3.4"
-    extract-zip "2.0.1"
-    progress "2.0.3"
-    proxy-agent "6.4.0"
-    semver "7.6.0"
-    tar-fs "3.0.5"
-    unbzip2-stream "1.4.3"
-    yargs "17.7.2"
+    debug "^4.3.5"
+    extract-zip "^2.0.1"
+    progress "^2.0.3"
+    proxy-agent "^6.4.0"
+    semver "^7.6.3"
+    tar-fs "^3.0.6"
+    unbzip2-stream "^1.4.3"
+    yargs "^17.7.2"
 
 "@sindresorhus/is@^4.0.0":
   version "4.6.0"
   resolved "https://registry.npmjs.org/@sindresorhus/is/-/is-4.6.0.tgz"
 
-"@sparticuz/chromium@^123.0.1":
-  version "123.0.1"
-  resolved "https://registry.npmjs.org/@sparticuz/chromium/-/chromium-123.0.1.tgz"
+"@sparticuz/chromium@^126.0.0":
+  version "126.0.0"
+  resolved "https://registry.yarnpkg.com/@sparticuz/chromium/-/chromium-126.0.0.tgz#4383d009c6dae1fb09e6fb9503ce50ac8348ce82"
   dependencies:
     follow-redirects "^1.15.6"
-    tar-fs "^3.0.5"
+    tar-fs "^3.0.6"
 
 "@szmarczak/http-timer@^4.0.5":
   version "4.0.6"
@@ -222,9 +222,9 @@ chalk@^2.4.2:
     escape-string-regexp "^1.0.5"
     supports-color "^5.3.0"
 
-chromium-bidi@0.5.23:
-  version "0.5.23"
-  resolved "https://registry.yarnpkg.com/chromium-bidi/-/chromium-bidi-0.5.23.tgz#0fbebc8b0c908d33f870b961d04fca3e2d4fa0ba"
+chromium-bidi@0.6.3:
+  version "0.6.3"
+  resolved "https://registry.yarnpkg.com/chromium-bidi/-/chromium-bidi-0.6.3.tgz#363fe1ca6b9c6122b9f1b2a47f9449ecf712f755"
   dependencies:
     mitt "3.0.1"
     urlpattern-polyfill "10.0.0"
@@ -294,9 +294,9 @@ core-util-is@~1.0.0:
   version "1.0.3"
   resolved "https://registry.npmjs.org/core-util-is/-/core-util-is-1.0.3.tgz"
 
-cosmiconfig@9.0.0:
+cosmiconfig@^9.0.0:
   version "9.0.0"
-  resolved "https://registry.npmjs.org/cosmiconfig/-/cosmiconfig-9.0.0.tgz"
+  resolved "https://registry.yarnpkg.com/cosmiconfig/-/cosmiconfig-9.0.0.tgz#34c3fc58287b915f3ae905ab6dc3de258b55ad9d"
   dependencies:
     env-paths "^2.2.1"
     import-fresh "^3.3.0"
@@ -307,13 +307,7 @@ data-uri-to-buffer@^6.0.0:
   version "6.0.1"
   resolved "https://registry.npmjs.org/data-uri-to-buffer/-/data-uri-to-buffer-6.0.1.tgz"
 
-debug@4, debug@4.3.4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.4:
-  version "4.3.4"
-  resolved "https://registry.npmjs.org/debug/-/debug-4.3.4.tgz"
-  dependencies:
-    ms "2.1.2"
-
-debug@4.3.5:
+debug@4, debug@^4.1.0, debug@^4.1.1, debug@^4.3.4, debug@^4.3.5:
   version "4.3.5"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.5.tgz#e83444eceb9fedd4a1da56d671ae2446a01a6e1e"
   dependencies:
@@ -324,6 +318,12 @@ debug@^2.6.9:
   resolved "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz"
   dependencies:
     ms "2.0.0"
+
+debug@^4.3.6:
+  version "4.3.6"
+  resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.6.tgz#2ab2c38fbaffebf8aa95fdfe6d88438c7a13c52b"
+  dependencies:
+    ms "2.1.2"
 
 decompress-response@^6.0.0:
   version "6.0.0"
@@ -343,9 +343,9 @@ degenerator@^5.0.0:
     escodegen "^2.1.0"
     esprima "^4.0.1"
 
-devtools-protocol@0.0.1299070:
-  version "0.0.1299070"
-  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.1299070.tgz#b3e4cf0b678a46f0f907ae6e07e03ad3a53c00df"
+devtools-protocol@0.0.1312386:
+  version "0.0.1312386"
+  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.1312386.tgz#5ab824d6f1669ec6c6eb0fba047e73601d969052"
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -397,16 +397,6 @@ esutils@^2.0.2:
   version "2.0.3"
   resolved "https://registry.npmjs.org/esutils/-/esutils-2.0.3.tgz"
 
-extract-zip@2.0.1:
-  version "2.0.1"
-  resolved "https://registry.npmjs.org/extract-zip/-/extract-zip-2.0.1.tgz"
-  dependencies:
-    debug "^4.1.1"
-    get-stream "^5.1.0"
-    yauzl "^2.10.0"
-  optionalDependencies:
-    "@types/yauzl" "^2.9.1"
-
 extract-zip@^1.7.0:
   version "1.7.0"
   resolved "https://registry.npmjs.org/extract-zip/-/extract-zip-1.7.0.tgz"
@@ -415,6 +405,16 @@ extract-zip@^1.7.0:
     debug "^2.6.9"
     mkdirp "^0.5.4"
     yauzl "^2.10.0"
+
+extract-zip@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.npmjs.org/extract-zip/-/extract-zip-2.0.1.tgz"
+  dependencies:
+    debug "^4.1.1"
+    get-stream "^5.1.0"
+    yauzl "^2.10.0"
+  optionalDependencies:
+    "@types/yauzl" "^2.9.1"
 
 fast-fifo@^1.1.0, fast-fifo@^1.2.0:
   version "1.3.2"
@@ -604,12 +604,6 @@ lowercase-keys@^2.0.0:
   version "2.0.0"
   resolved "https://registry.npmjs.org/lowercase-keys/-/lowercase-keys-2.0.0.tgz"
 
-lru-cache@^6.0.0:
-  version "6.0.0"
-  resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-6.0.0.tgz"
-  dependencies:
-    yallist "^4.0.0"
-
 lru-cache@^7.14.1:
   version "7.18.3"
   resolved "https://registry.npmjs.org/lru-cache/-/lru-cache-7.18.3.tgz"
@@ -719,11 +713,11 @@ process-nextick-args@~2.0.0:
   version "2.0.1"
   resolved "https://registry.npmjs.org/process-nextick-args/-/process-nextick-args-2.0.1.tgz"
 
-progress@2.0.3, progress@^2.0.3:
+progress@^2.0.3:
   version "2.0.3"
   resolved "https://registry.npmjs.org/progress/-/progress-2.0.3.tgz"
 
-proxy-agent@6.4.0:
+proxy-agent@^6.4.0:
   version "6.4.0"
   resolved "https://registry.npmjs.org/proxy-agent/-/proxy-agent-6.4.0.tgz"
   dependencies:
@@ -747,24 +741,24 @@ pump@^3.0.0:
     end-of-stream "^1.1.0"
     once "^1.3.1"
 
-puppeteer-core@22.11.2, puppeteer-core@^22.11.2:
-  version "22.11.2"
-  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-22.11.2.tgz#6c2eb1b17be075e2f6e8cf82061d67af6267ecf8"
+puppeteer-core@22.15.0, puppeteer-core@^22.11.1:
+  version "22.15.0"
+  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-22.15.0.tgz#c76926cce5dbc177572797a9dacc325c313fa91a"
   dependencies:
-    "@puppeteer/browsers" "2.2.3"
-    chromium-bidi "0.5.23"
-    debug "4.3.5"
-    devtools-protocol "0.0.1299070"
-    ws "8.17.1"
+    "@puppeteer/browsers" "2.3.0"
+    chromium-bidi "0.6.3"
+    debug "^4.3.6"
+    devtools-protocol "0.0.1312386"
+    ws "^8.18.0"
 
-puppeteer@^22.11.2:
-  version "22.11.2"
-  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-22.11.2.tgz#39cbcdbf1ae0505f60a49d697d8b23e1b0f371b1"
+puppeteer@^22.15.0:
+  version "22.15.0"
+  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-22.15.0.tgz#4f842087090f1d9017ce947512e7baff55a10e75"
   dependencies:
-    "@puppeteer/browsers" "2.2.3"
-    cosmiconfig "9.0.0"
-    devtools-protocol "0.0.1299070"
-    puppeteer-core "22.11.2"
+    "@puppeteer/browsers" "2.3.0"
+    cosmiconfig "^9.0.0"
+    devtools-protocol "0.0.1312386"
+    puppeteer-core "22.15.0"
 
 queue-tick@^1.0.1:
   version "1.0.1"
@@ -814,11 +808,9 @@ safe-buffer@~5.1.0, safe-buffer@~5.1.1:
   version "5.1.2"
   resolved "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz"
 
-semver@7.6.0:
-  version "7.6.0"
-  resolved "https://registry.npmjs.org/semver/-/semver-7.6.0.tgz"
-  dependencies:
-    lru-cache "^6.0.0"
+semver@^7.6.3:
+  version "7.6.3"
+  resolved "https://registry.yarnpkg.com/semver/-/semver-7.6.3.tgz#980f7b5550bc175fb4dc09403085627f9eb33143"
 
 smart-buffer@^4.2.0:
   version "4.2.0"
@@ -882,17 +874,7 @@ supports-color@^5.3.0:
   dependencies:
     has-flag "^3.0.0"
 
-tar-fs@3.0.5:
-  version "3.0.5"
-  resolved "https://registry.npmjs.org/tar-fs/-/tar-fs-3.0.5.tgz"
-  dependencies:
-    pump "^3.0.0"
-    tar-stream "^3.1.5"
-  optionalDependencies:
-    bare-fs "^2.1.1"
-    bare-path "^2.1.0"
-
-tar-fs@^3.0.5:
+tar-fs@^3.0.6:
   version "3.0.6"
   resolved "https://registry.npmjs.org/tar-fs/-/tar-fs-3.0.6.tgz"
   dependencies:
@@ -932,7 +914,7 @@ typedarray@^0.0.6:
   version "0.0.6"
   resolved "https://registry.npmjs.org/typedarray/-/typedarray-0.0.6.tgz"
 
-unbzip2-stream@1.4.3:
+unbzip2-stream@^1.4.3:
   version "1.4.3"
   resolved "https://registry.npmjs.org/unbzip2-stream/-/unbzip2-stream-1.4.3.tgz"
   dependencies:
@@ -967,23 +949,19 @@ wrappy@1:
   version "1.0.2"
   resolved "https://registry.npmjs.org/wrappy/-/wrappy-1.0.2.tgz"
 
-ws@8.17.1:
-  version "8.17.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.17.1.tgz#9293da530bb548febc95371d90f9c878727d919b"
+ws@^8.18.0:
+  version "8.18.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.0.tgz#0d7505a6eafe2b0e712d232b42279f53bc289bbc"
 
 y18n@^5.0.5:
   version "5.0.8"
   resolved "https://registry.npmjs.org/y18n/-/y18n-5.0.8.tgz"
 
-yallist@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/yallist/-/yallist-4.0.0.tgz"
-
 yargs-parser@^21.1.1:
   version "21.1.1"
   resolved "https://registry.npmjs.org/yargs-parser/-/yargs-parser-21.1.1.tgz"
 
-yargs@17.7.2:
+yargs@^17.7.2:
   version "17.7.2"
   resolved "https://registry.npmjs.org/yargs/-/yargs-17.7.2.tgz"
   dependencies:
