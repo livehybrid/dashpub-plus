@@ -7,7 +7,10 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
-    
+    groups:
+      pip:
+        applies-to: version-updates
+        
   - package-ecosystem: "npm"
     directories:
       - "/screenshotter"
@@ -15,6 +18,9 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
+    groups:
+      npm:
+        applies-to: version-updates
 
   - package-ecosystem: "docker"
     directories:
@@ -24,3 +30,6 @@ updates:
       interval: "daily"
     open-pull-requests-limit: 10
     target-branch: "develop"
+    groups:
+      docker:
+        applies-to: version-updates
