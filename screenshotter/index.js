@@ -4,52 +4,76 @@ const puppeteer = require("puppeteer-core");
 const https = require('https');
 const fs = require("fs");
 
-var url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
+const url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
 
 (async () => {
     let browser = "";
-    const executablePath = await chromium.executablePath()
-    browser = await puppeteer.launch({
-        args: [      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--single-process'],
-        defaultViewport: chromium.defaultViewport,
-        executablePath: executablePath,
-        headless: "new",
-        ignoreHTTPSErrors: true,
-    });
+    try {
+        const executablePath = await chromium.executablePath();
+        browser = await puppeteer.launch({
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+//                '--single-process',
+                '--disable-gpu',
+                '--disable-software-rasterizer',
+                '--disable-features=site-per-process'
+            ],
+            defaultViewport: chromium.defaultViewport,
+            executablePath: executablePath,
+            headless: "new",
+            ignoreHTTPSErrors: true,
+        });
 
-    // Use puppeteer to parse and extract all href links
-    const page = await browser.newPage();
-    await page.goto("http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT, { timeout:90000, waitUntil: 'networkidle2'});
-    await page.screenshot({path: '/dashpub/screenshots/index.jpg', type: 'jpeg', quality: 80, fullPage: true});
-    const links = await page.$$('a');
-    for (const link of links) {
-        const href = await link.evaluate(el => el.href);
-        const url = new URL(href, page.url());
-        if (url.hostname==process.env.NGINX_HOST) {
-            const dashboard = url.pathname.startsWith('/') ? url.pathname.slice(1) : url.pathname;
+        const page = await browser.newPage();
+        console.log(`Goto ${url}`);
+        let links = [];
+        await page.goto(url, { timeout: 90000, waitUntil: 'networkidle2' });
+        try {
+            await page.screenshot({ path: '/dashpub/screenshots/index.jpg', type: 'jpeg', quality: 80, fullPage: true });
+            links = await page.evaluate((baseUrl) => {
+                return Array.from(document.querySelectorAll('a'))
+                    .map(link => link.href)
+                    .filter(href => href.startsWith(baseUrl));
+            }, url);
+        } catch (error) {
+            console.error('Screenshot failed:', error);
+        } finally {
+              console.log("Done index screenshot");
+              await page.close();
+        }
+        console.log(links);
+        for (const link of links) {
             try {
-                const dashboard_url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT+"/"+dashboard;
-                console.log(`Getting dashboard - ${dashboard_url}`);
-                const page = await browser.newPage();
-                page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-                await page.setViewport({ width: 810, height: 415 })
-                await page.goto(dashboard_url, {
-                    timeout: 90000,
-                    waitUntil: 'networkidle2'
+                const href = link
+                const dashboard = new URL(href, page.url()).pathname.slice(1);
+                const dashboard_url = `${url}/${dashboard}`;
+                console.log(`Processing: ${dashboard_url}`);
+                const pageInstance = await browser.newPage();
+                pageInstance.setDefaultNavigationTimeout(120000); // Set timeout to 120 seconds
+
+                //pageInstance.on('console', msg => console.log('PAGE LOG:', msg.text()));
+                pageInstance.on('response', async (response) => {
+                    const headers = response.headers();
+//                    console.log(`URL: ${response.url()}`);
+//                    console.log('HTTP Headers:', headers);
                 });
-                await page.waitForSelector(".url2png-cheese", {timeout: 100000});
-                const body = page.$("body");
-                console.log("Taking screenshot")
-                await page.screenshot({path: '/dashpub/screenshots/' + dashboard + '.jpg', type: 'jpeg', quality: 80, fullPage: true});
-                await page.close();
+                await pageInstance.setViewport({ width: 1920, height: 1080 });
+                await pageInstance.goto(dashboard_url, { timeout: 90000, waitUntil: 'domcontentloaded' });
+                await pageInstance.waitForSelector(".url2png-cheese", { timeout: 100000 });
+                await pageInstance.screenshot({ path: `/dashpub/screenshots/${dashboard}.jpg`, type: 'jpeg', quality: 80, fullPage: true });
+                await pageInstance.close();
             } catch (error) {
-                console.log(error);
+                console.error(`Error processing ${link}:`, error);
+            } finally {
+              console.log(`Finished ${link}`);
             }
         }
-    };
 
-    await browser.close();
+        await browser.close();
+    } catch (error) {
+        console.error('Error during Puppeteer operation:', error);
+        if (browser) await browser.close();
+    }
 })();
