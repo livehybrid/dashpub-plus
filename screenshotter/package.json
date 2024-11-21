@@ -7,9 +7,9 @@
   "license": "MIT",
   "scripts": {},
   "dependencies": {
-    "@sparticuz/chromium": "^130.0.0",
+    "@sparticuz/chromium": "^131.0.0",
     "chromium": "^3.0.3",
-    "puppeteer": "^23.7.1",
+    "puppeteer": "^23.9.0",
     "puppeteer-core": "^23.0.1"
   }
 }

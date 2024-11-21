@@ -38,9 +38,9 @@
   version "4.6.0"
   resolved "https://registry.npmjs.org/@sindresorhus/is/-/is-4.6.0.tgz"
 
-"@sparticuz/chromium@^130.0.0":
-  version "130.0.0"
-  resolved "https://registry.yarnpkg.com/@sparticuz/chromium/-/chromium-130.0.0.tgz#9180a1958e2b412822a1a4a8058e43ce8c2c2cf0"
+"@sparticuz/chromium@^131.0.0":
+  version "131.0.0"
+  resolved "https://registry.yarnpkg.com/@sparticuz/chromium/-/chromium-131.0.0.tgz#ec1ff16a17118b874b5a8944a6e4167175759697"
   dependencies:
     follow-redirects "^1.15.9"
     tar-fs "^3.0.6"
@@ -343,9 +343,9 @@ degenerator@^5.0.0:
     escodegen "^2.1.0"
     esprima "^4.0.1"
 
-devtools-protocol@0.0.1354347:
-  version "0.0.1354347"
-  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.1354347.tgz#5cb509610b8f61fc69a31e5c810d5bed002d85ea"
+devtools-protocol@0.0.1367902:
+  version "0.0.1367902"
+  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.1367902.tgz#7333bfc4466c5a54a4c6de48a9dfbcb4b811660c"
 
 emoji-regex@^8.0.0:
   version "8.0.0"
@@ -745,26 +745,26 @@ pump@^3.0.0:
     end-of-stream "^1.1.0"
     once "^1.3.1"
 
-puppeteer-core@23.7.1, puppeteer-core@^23.0.1:
-  version "23.7.1"
-  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-23.7.1.tgz#b1c313f1d3572ed772d82178b012f7c046cb53bb"
+puppeteer-core@23.9.0, puppeteer-core@^23.0.1:
+  version "23.9.0"
+  resolved "https://registry.yarnpkg.com/puppeteer-core/-/puppeteer-core-23.9.0.tgz#24add69fb58dde4ac49d165872b44a30d2bf5b32"
   dependencies:
     "@puppeteer/browsers" "2.4.1"
     chromium-bidi "0.8.0"
     debug "^4.3.7"
-    devtools-protocol "0.0.1354347"
+    devtools-protocol "0.0.1367902"
     typed-query-selector "^2.12.0"
     ws "^8.18.0"
 
-puppeteer@^23.7.1:
-  version "23.7.1"
-  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-23.7.1.tgz#4394ead5075d48146151abca3b569d5622c63002"
+puppeteer@^23.9.0:
+  version "23.9.0"
+  resolved "https://registry.yarnpkg.com/puppeteer/-/puppeteer-23.9.0.tgz#69a5f3f4a9589865e0f96214f815112e9e206beb"
   dependencies:
     "@puppeteer/browsers" "2.4.1"
     chromium-bidi "0.8.0"
     cosmiconfig "^9.0.0"
-    devtools-protocol "0.0.1354347"
-    puppeteer-core "23.7.1"
+    devtools-protocol "0.0.1367902"
+    puppeteer-core "23.9.0"
     typed-query-selector "^2.12.0"
 
 queue-tick@^1.0.1:
