@@ -13,6 +13,8 @@ const url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
         browser = await puppeteer.launch({
             args: [
                 '--no-sandbox',
+                '--use-gl=angle',
+                '--use-angle=swiftshader',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
 //                '--single-process',
