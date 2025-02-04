@@ -87,7 +87,7 @@ services:
     #     splunk-verify-connection: "false"
 
   redis-node-0:
-    image: docker.io/bitnami/redis-cluster:7.2.5@sha256:1212402afa3f991a27322e3d7540acf6d56b13497311d4364e1bfc2c1b34884b
+    image: docker.io/bitnami/redis-cluster:latest
     environment:
       REDIS_NODES: redis-node-0 redis-node-1 redis-node-2
       REDIS_PASSWORD: TestPassword1
@@ -97,7 +97,7 @@ services:
       io.rancher.container.pull_image: always
 
   redis-node-1:
-    image: docker.io/bitnami/redis-cluster:7.2.5@sha256:1212402afa3f991a27322e3d7540acf6d56b13497311d4364e1bfc2c1b34884b
+    image: docker.io/bitnami/redis-cluster:latest
     environment:
       REDIS_NODES: redis-node-0 redis-node-1 redis-node-2
       REDIS_PASSWORD: TestPassword1
@@ -107,7 +107,7 @@ services:
       io.rancher.container.pull_image: always
 
   redis-node-2:
-    image: docker.io/bitnami/redis-cluster:7.2.5@sha256:1212402afa3f991a27322e3d7540acf6d56b13497311d4364e1bfc2c1b34884b
+    image: docker.io/bitnami/redis-cluster:latest
     environment:
       REDISCLI_AUTH: TestPassword1
       REDIS_CLUSTER_CREATOR: "yes"
