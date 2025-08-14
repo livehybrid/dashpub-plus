@@ -38,22 +38,53 @@ print(f"Connecting to redis host={redis_host}")
 
 try:
     # Connect to Redis cluster using the primary node
-    r = RedisCluster(
-        host="redis-node-0",
-        port=redis_port,
-        decode_responses=True,
-        skip_full_coverage_check=True,
-        password=redis_pass,
-        socket_connect_timeout=5,
-        socket_timeout=5,
-        retry_on_timeout=True,
-        health_check_interval=30,
-        cluster_error_retry_attempts=3
-    )
+    # Add retry logic for cluster initialization
+    max_retries = 5
+    retry_delay = 10
     
-    # Test the connection
-    r.ping()
-    print("Connected to Redis cluster successfully")
+    for attempt in range(max_retries):
+        try:
+            print(f"Attempting to connect to Redis cluster (attempt {attempt + 1}/{max_retries})")
+            
+            r = RedisCluster(
+                host="redis-node-0",
+                port=redis_port,
+                decode_responses=True,
+                skip_full_coverage_check=True,
+                password=redis_pass,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True,
+                health_check_interval=30,
+                cluster_error_retry_attempts=3
+            )
+            
+            # Test the connection and cluster status
+            r.ping()
+            
+            # Check cluster info to ensure it's properly initialized
+            cluster_info = r.cluster_info()
+            print(f"Cluster state: {cluster_info.get('cluster_state', 'unknown')}")
+            print(f"Slots covered: {cluster_info.get('cluster_slots_assigned', 'unknown')}")
+            
+            if cluster_info.get('cluster_state') == 'ok':
+                print("Connected to Redis cluster successfully - cluster is ready!")
+                break
+            else:
+                print(f"Cluster not ready yet, state: {cluster_info.get('cluster_state')}")
+                if attempt < max_retries - 1:
+                    print(f"Waiting {retry_delay} seconds before retry...")
+                    time.sleep(retry_delay)
+                else:
+                    raise Exception("Cluster failed to initialize properly after all retries")
+                    
+        except Exception as e:
+            print(f"Connection attempt {attempt + 1} failed: {e}")
+            if attempt < max_retries - 1:
+                print(f"Waiting {retry_delay} seconds before retry...")
+                time.sleep(retry_delay)
+            else:
+                raise e
     
 except Exception as e:
     traceback.print_exc(file=sys.stdout)

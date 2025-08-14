@@ -18,7 +18,7 @@ services:
       - DASHPUB_BRANCH=develop
       - DASHPUB_BUILD_ID="1"
       #      - DASHPUB_CUSTOM_DEPS='[{"@react-google-maps/api"="^2.19.2"},{"react-icons":"*"}]'
-      #      - DASHPUB_CUSTOM_VIZ_PATH=/custom_components
+      #      - DASHPUB_CUSTOM_VIZ_PATH=/custom_componentsg
       - DASHPUB_DASHBOARDS=example[Demo|Example]
       - DASHPUB_FOLDERNAME=app
       - DASHPUB_FOOTER=Demo Splunk dashboards hosted
@@ -75,7 +75,7 @@ services:
 
   redis-node-0:
     image: redis:8.2-alpine
-    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1"]
+    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1", "--cluster-announce-ip", "redis-node-0", "--cluster-announce-port", "6379"]
     volumes:
       - redis-node-0-data:/data
     healthcheck:
@@ -88,7 +88,7 @@ services:
 
   redis-node-1:
     image: redis:8.2-alpine
-    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1"]
+    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1", "--cluster-announce-ip", "redis-node-1", "--cluster-announce-port", "6379"]
     volumes:
       - redis-node-1-data:/data
     healthcheck:
@@ -101,7 +101,7 @@ services:
 
   redis-node-2:
     image: redis:8.2-alpine
-    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1"]
+    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1", "--cluster-announce-ip", "redis-node-2", "--cluster-announce-port", "6379"]
     volumes:
       - redis-node-2-data:/data
     healthcheck:
@@ -121,12 +121,26 @@ services:
     command: >
       sh -c "
         echo 'Waiting for all Redis nodes to be ready...' &&
-        sleep 5 &&
+        sleep 15 &&
+        echo 'Checking node connectivity...' &&
+        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 ping &&
+        redis-cli -h redis-node-1 -p 6379 -a TestPassword1 ping &&
+        redis-cli -h redis-node-2 -p 6379 -a TestPassword1 ping &&
+        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 flushall &&
+        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 cluster reset &&
+        redis-cli -h redis-node-1 -p 6379 -a TestPassword1 flushall &&
+        redis-cli -h redis-node-1 -p 6379 -a TestPassword1 cluster reset &&
+        redis-cli -h redis-node-2 -p 6379 -a TestPassword1 flushall &&
+        redis-cli -h redis-node-2 -p 6379 -a TestPassword1 cluster reset &&
         echo 'Initializing Redis cluster...' &&
         redis-cli -a TestPassword1 --cluster create redis-node-0:6379 redis-node-1:6379 redis-node-2:6379 --cluster-replicas 0 --cluster-yes &&
-        echo 'Redis cluster initialization complete!' &&
-        echo 'Cluster info:' &&
-        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 cluster info
+        echo 'Waiting for cluster to stabilize...' &&
+        sleep 20 &&
+        echo 'Checking cluster status...' &&
+        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 cluster info &&
+        echo 'Verifying all slots are covered...' &&
+        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 cluster slots | head -10 &&
+        echo 'Redis cluster initialization complete!'
       "
 
 volumes:
