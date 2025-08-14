@@ -8,16 +8,9 @@ services:
       REDIS_PASS: TestPassword1
       REDIS_SSL: "False"
       REDIS_USER: dashpub
-    stdin_open: true
-    tty: true
-    links:
-      #      - olly-api:olly_api
-      - redis-node-1:redis-node-1
-      - redis-node-0:redis-node-0
-      - redis-node-2:redis-node-2
-      - dashpub:dashpub
     labels:
       io.rancher.container.pull_image: always
+
   dashpub:
     image: livehybrid/splunk-dashpub:latest
     environment:
@@ -47,22 +40,17 @@ services:
       - SPLUNKD_USER
       - VERCEL_URL=localhost
       - ENV_MODE
-    stdin_open: true
-    #volumes:
-    #      - /home/rancher/dashboard_publishing_livehybrid/mapping/src/custom_components/:/custom_components
-    tty: true
+
   screenshotter:
     image: livehybrid/dashpub_screenshotter:latest
     environment:
       NGINX_HOST: nginx
       NGINX_PORT: "3001"
-    stdin_open: true
     volumes:
       - screenshots:/dashpub/screenshots
-    tty: true
+
   nginx:
     image: nginx:mainline-perl
-    stdin_open: true
     labels:
       - traefik.http.routers.dashpub-https.service=dashpub-service
       - traefik.http.services.dashpub-service.loadbalancer.server.port=3001
@@ -81,47 +69,69 @@ services:
     #     splunk-format: raw
     #     splunk-index: nginx_web
     #     splunk-source: docker:dashpub:nginx
-    #     splunk-sourcetype: nginx:plus:access
     #     splunk-token: REDACTED
     #     splunk-url: REDACTED
     #     splunk-verify-connection: "false"
 
   redis-node-0:
-    image: docker.io/bitnami/redis-cluster:latest
-    environment:
-      REDIS_NODES: redis-node-0 redis-node-1 redis-node-2
-      REDIS_PASSWORD: TestPassword1
-    stdin_open: true
-    tty: true
+    image: redis:8.2-alpine
+    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1"]
+    volumes:
+      - redis-node-0-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "-a", "TestPassword1", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     labels:
       io.rancher.container.pull_image: always
 
   redis-node-1:
-    image: docker.io/bitnami/redis-cluster:latest
-    environment:
-      REDIS_NODES: redis-node-0 redis-node-1 redis-node-2
-      REDIS_PASSWORD: TestPassword1
-    stdin_open: true
-    tty: true
+    image: redis:8.2-alpine
+    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1"]
+    volumes:
+      - redis-node-1-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "-a", "TestPassword1", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     labels:
       io.rancher.container.pull_image: always
 
   redis-node-2:
-    image: docker.io/bitnami/redis-cluster:latest
-    environment:
-      REDISCLI_AUTH: TestPassword1
-      REDIS_CLUSTER_CREATOR: "yes"
-      REDIS_CLUSTER_REPLICAS: "0"
-      REDIS_NODES: redis-node-0 redis-node-1 redis-node-2
-      REDIS_PASSWORD: TestPassword1
-    stdin_open: true
-    tty: true
-    links:
-      - redis-node-1:redis-node-1
-      - redis-node-0:redis-node-0
+    image: redis:8.2-alpine
+    command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1"]
+    volumes:
+      - redis-node-2-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-p", "6379", "-a", "TestPassword1", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     labels:
       io.rancher.container.pull_image: always
+
+  redis-cluster-init:
+    image: redis:8.2-alpine
+    depends_on:
+      - redis-node-0
+      - redis-node-1
+      - redis-node-2
+    command: >
+      sh -c "
+        echo 'Waiting for all Redis nodes to be ready...' &&
+        sleep 5 &&
+        echo 'Initializing Redis cluster...' &&
+        redis-cli -a TestPassword1 --cluster create redis-node-0:6379 redis-node-1:6379 redis-node-2:6379 --cluster-replicas 0 --cluster-yes &&
+        echo 'Redis cluster initialization complete!' &&
+        echo 'Cluster info:' &&
+        redis-cli -h redis-node-0 -p 6379 -a TestPassword1 cluster info
+      "
 
 volumes:
   screenshots:
     external: false
+  redis-node-0-data:
+  redis-node-1-data:
+  redis-node-2-data:
