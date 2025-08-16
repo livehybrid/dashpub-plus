@@ -47,7 +47,7 @@ try:
             print(f"Attempting to connect to Redis cluster (attempt {attempt + 1}/{max_retries})")
             
             r = RedisCluster(
-                host="redis-node-0",
+                host=redis_host,
                 port=redis_port,
                 decode_responses=True,
                 skip_full_coverage_check=True,
@@ -92,7 +92,7 @@ except Exception as e:
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     print(exc_type, fname, exc_tb.tb_lineno)
     print(e)
-    print(f"Cannot connect to Redis cluster on host=redis-node-0 port={redis_port}")
+    print(f"Cannot connect to Redis cluster on host={redis_host} port={redis_port}")
     exit(999)
 
 @app.route('/', defaults={'u_path': ''})
