@@ -18,7 +18,7 @@ services:
       - DASHPUB_BRANCH=develop
       - DASHPUB_BUILD_ID="1"
       #      - DASHPUB_CUSTOM_DEPS='[{"@react-google-maps/api"="^2.19.2"},{"react-icons":"*"}]'
-      #      - DASHPUB_CUSTOM_VIZ_PATH=/custom_componentsg
+      #      - DASHPUB_CUSTOM_VIZ_PATH=/custom_components
       - DASHPUB_DASHBOARDS=example[Demo|Example]
       - DASHPUB_FOLDERNAME=app
       - DASHPUB_FOOTER=Demo Splunk dashboards hosted
