@@ -3,6 +3,10 @@ name: Publish Docker image
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - develop
+      - ws-*
 
 jobs:
   push_to_registry:
@@ -38,6 +42,7 @@ jobs:
         uses: docker/metadata-action@f7b4ed12385588c3f9bc252f0a2b520d83b52d48
         with:
           images: ${{ matrix.image }}
+          tags: ${{ github.event_name == 'release' && github.event.action == 'published' && 'latest' || github.ref_name }}
 
       - name: Build and push Docker image
         id: push
@@ -58,7 +63,7 @@ jobs:
  #         push-to-registry: true
   scan:
     name: Trivy Scan
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -71,10 +76,14 @@ jobs:
             image_url: index.docker.io/livehybrid/dashpub_screenshotter
     needs: push_to_registry
     steps:
+      - name: Set Trivy Image Tag
+        id: set-tag
+        run: echo "image_tag=${{ github.event_name == 'release' && github.event.action == 'published' && 'latest' || github.ref_name }}" >> $GITHUB_ENV
+      
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ matrix.image }}
+          image-ref: ${{ matrix.image }}:${{ env.image_tag }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true

@@ -13,6 +13,33 @@ updates:
         patterns:
         - "*"
     
+  - package-ecosystem: "docker-compose"
+    directories:
+      - "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    groups:
+      docker-compose:
+        applies-to: version-updates
+        patterns:
+        - "*"
+
+      
+  - package-ecosystem: "docker"
+    directories:
+      - "/apicache"
+      - "/screenshotter"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    groups:
+      docker:
+        applies-to: version-updates
+        patterns:
+        - "*"  
         
   - package-ecosystem: "npm"
     directories:
@@ -32,11 +59,24 @@ updates:
       - "/apicache"
       - "/screenshotter"
     schedule:
-      interval: "daily"
+      interval: "weekly"
     open-pull-requests-limit: 10
     target-branch: "develop"
     groups:
       docker:
+        applies-to: version-updates
+        patterns:
+        - "*"
+
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/github/workflows"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    groups:
+      github-actions:
         applies-to: version-updates
         patterns:
         - "*"

@@ -1,6 +1,11 @@
-FROM python:3.13
+FROM python:3.13-alpine
 
-RUN apt-get update && apt-get upgrade -y  && rm -rf /var/lib/apt/lists/*
+# Install system dependencies
+RUN apk add --no-cache \
+    gcc \
+    musl-dev \
+    libffi-dev \
+    && rm -rf /var/cache/apk/*
 
 WORKDIR /code
 

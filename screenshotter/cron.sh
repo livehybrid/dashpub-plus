@@ -1,21 +1,23 @@
+#!/bin/sh
+
 env > /etc/environment
-echo "*/15 * * * * /usr/local/bin/node /app/index.js" | crontab -
 
-# Make sure we react to these signals by running stop() when see them - for clean shutdown
-# And then exiting
-trap "stop cron; exit 0;" TERM INT
-
-stop()
-{
-  # We're here because we've seen SIGTERM, likely via a Docker stop command or similar
-  # Let's shutdown cleanly
-  echo "SIGTERM caught, terminating cron process..."
-  # Record PIDs
-  pid=$(pidof cron)
-  # Kill them
-  kill -TERM $pid > /dev/null 2>&1
-  sleep 1
-  echo "Terminated."
+# Function to stop gracefully
+stop() {
+  echo "SIGTERM caught, shutting down gracefully..."
   exit 0
 }
-cron -f
+
+# Set up signal handlers
+trap stop TERM INT
+
+echo "Starting screenshotter service..."
+
+# Run the screenshotter immediately
+/usr/local/bin/node /app/index.js
+
+# Then run it every 15 minutes
+while true; do
+  sleep 900  # 15 minutes = 900 seconds
+  /usr/local/bin/node /app/index.js
+done
