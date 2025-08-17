@@ -1,4 +1,3 @@
-const chromium = require("@sparticuz/chromium");
 const puppeteer = require("puppeteer-core");
 //const fetch = require('node-fetch');
 const https = require('https');
@@ -9,7 +8,7 @@ const url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
 (async () => {
     let browser = "";
     try {
-        const executablePath = await chromium.executablePath();
+        const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
         browser = await puppeteer.launch({
             args: [
                 '--no-sandbox',
@@ -22,7 +21,7 @@ const url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
                 '--disable-software-rasterizer',
                 '--disable-features=site-per-process'
             ],
-            defaultViewport: chromium.defaultViewport,
+            defaultViewport: { width: 1920, height: 1080 },
             executablePath: executablePath,
             headless: "new",
             ignoreHTTPSErrors: true,
