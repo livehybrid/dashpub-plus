@@ -54,20 +54,6 @@ updates:
         patterns:
         - "*"
 
-  - package-ecosystem: "docker"
-    directories:
-      - "/apicache"
-      - "/screenshotter"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
-    target-branch: "develop"
-    groups:
-      docker:
-        applies-to: version-updates
-        patterns:
-        - "*"
-
   - package-ecosystem: "github-actions"
     directories:
       - "/github/workflows"
