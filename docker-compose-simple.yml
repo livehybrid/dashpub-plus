@@ -40,7 +40,7 @@ services:
     tty: true
 
   redis-node-0:
-    image: docker.io/bitnami/redis-cluster:8.2.0@sha256:e7786de51799eb115b498c5dc1a95d1b14844b8fabf8d374e97f00da4a801b4d
+    image: docker.io/bitnami/redis-cluster:8.2.1@sha256:00cd760641dc73dca95826e6be8fa2b02b844086c0e1d2314bec0f78c69aefaa
     environment:
       REDIS_NODES: redis-node-0
       REDIS_PASSWORD: TestPassword1
