@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:25-alpine
 
 # Install system dependencies for Chromium
 RUN apk add --no-cache \
