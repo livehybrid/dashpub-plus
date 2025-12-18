@@ -11,6 +11,19 @@ RUN apk add --no-cache \
     ttf-freefont \
     && rm -rf /var/cache/apk/*
 
+    # Manually patch glob in system npm to fix vulnerabilities
+RUN mkdir -p /tmp/glob-fix && \
+cd /tmp/glob-fix && \
+npm init -y && \
+npm install glob@^10.5.0 && \
+rm -rf /usr/local/lib/node_modules/npm/node_modules/glob && \
+cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/ && \
+if [ -d "/usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob" ]; then \
+  rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob && \
+  cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/; \
+fi && \
+rm -rf /tmp/glob-fix
+
 # Set environment variables for Chromium
 ENV CHROME_BIN=/usr/bin/chromium-browser \
     CHROME_PATH=/usr/lib/chromium/ \
