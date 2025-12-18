@@ -16,6 +16,8 @@ import logging
 import sys
 import traceback
 from dotted_dict import DottedDict
+import secrets
+import string
 
 app = Flask('__name__')
 api = Api(app)
@@ -33,6 +35,21 @@ redis_ssl = os.environ.get("REDIS_SSL", False)
 
 dashpub_host = os.environ.get("DASHPUB_HOST","dashpub")
 dashpub_port = os.environ.get("DASHPUB_PORT", 3000)
+
+# Paths to exclude from caching (bypass cache and serve directly)
+CACHE_EXCLUDE_PATHS = [
+    "api/dashboards/manifest",
+    "api/dashboards"
+]
+
+# Generate a random 6-character alphanumeric prefix for cache keys
+# This prevents cache key collisions when multiple servers cache the same paths
+CACHE_KEY_PREFIX = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(6))
+print(f"Cache key prefix: {CACHE_KEY_PREFIX}")
+
+def get_cache_key(path):
+    """Get the prefixed cache key for a given path."""
+    return f"{CACHE_KEY_PREFIX}:{path}"
 
 print(f"Connecting to redis host={redis_host}")
 
@@ -117,16 +134,28 @@ def catch_all(u_path):
             except(Exception) as e:
                 print(e)
 #        print(request.headers.get('x-amzn-oidc-accesstoken'))
+        
+        # Check if this path should be excluded from caching
+        if u_path in CACHE_EXCLUDE_PATHS:
+            url = f"http://{dashpub_host}:{dashpub_port}/{u_path}"
+            resp = requests.get(url, timeout=60)
+            response = make_response(resp.content.decode("utf-8"))
+            response.headers['cache-control'] = "s-maxage=60, stale-while-revalidate"
+            response.status_code = 200
+            log_resp(start_time, u_path, oidc_email, "Cache excluded path, serving direct response")
+            return response
+        
         while True:
             try:
-                redis_data = r.get(u_path)
+                cache_key = get_cache_key(u_path)
+                redis_data = r.get(cache_key)
                 if redis_data == None:
                     # Go and get the page, but put a flag in Redis whilst we wait...
                     redis_data = {}
                     redis_data['value'] = "Pending"
                     #"Testing - "+str(random())
-                    r.set(u_path, json.dumps(redis_data))
-                    r.expire(u_path,60)
+                    r.set(cache_key, json.dumps(redis_data))
+                    r.expire(cache_key,60)
 
                     url = f"http://{dashpub_host}:{dashpub_port}/{u_path}"
                     resp = requests.get(url, timeout=60)
@@ -139,8 +168,8 @@ def catch_all(u_path):
                     #print(f"Setting TTL to {cache_time}")
 
                     redis_data['value'] = resp.content.decode("utf-8")
-                    r.set(u_path, json.dumps(redis_data))
-                    r.expire(u_path,cache_time)
+                    r.set(cache_key, json.dumps(redis_data))
+                    r.expire(cache_key,cache_time)
                     log_resp(start_time, u_path, oidc_email, f"cache_time={cache_time}")
                     response = make_response(redis_data['value'])
                     response.headers['cache-control'] = f"s-maxage={cache_time}, stale-while-revalidate"
@@ -150,7 +179,7 @@ def catch_all(u_path):
                     #print("Waiting for data...sleeping...")
                     sleep(1)
                 else:
-                    cache_time = r.ttl(u_path)
+                    cache_time = r.ttl(cache_key)
                     try:
                         redis_data = redis_data.decode("utf-8")
                     except:
@@ -197,14 +226,15 @@ def catch_all(u_path):
                 print(e)
 #        print(request.headers.get('x-amzn-oidc-accesstoken'))
         while True:
-            redis_data = r.get(u_path)
+            cache_key = get_cache_key(u_path)
+            redis_data = r.get(cache_key)
             if redis_data == None:
                 # Go and get the page, but put a flag in Redis whilst we wait...
                 redis_data = {}
                 redis_data['value'] = "Pending"
                 #"Testing - "+str(random())
-                r.set(u_path, json.dumps(redis_data))
-                r.expire(u_path,60)
+                r.set(cache_key, json.dumps(redis_data))
+                r.expire(cache_key,60)
 
                 url = f"http://olly_api:80/{u_path}"
                 resp = requests.get(url, timeout=60)
@@ -217,8 +247,8 @@ def catch_all(u_path):
                 #print(f"Setting TTL to {cache_time}")
 
                 redis_data['value'] = resp.content.decode("utf-8")
-                r.set(u_path, json.dumps(redis_data))
-                r.expire(u_path,cache_time)
+                r.set(cache_key, json.dumps(redis_data))
+                r.expire(cache_key,cache_time)
                 log_resp(start_time, u_path, oidc_email, f"cache_time={cache_time}")
                 response = make_response(redis_data['value'])
                 response.headers['cache-control'] = f"s-maxage={cache_time}, stale-while-revalidate"
@@ -228,7 +258,7 @@ def catch_all(u_path):
                 #print("Waiting for data...sleeping...")
                 sleep(1)
             else:
-                cache_time = r.ttl(u_path)
+                cache_time = r.ttl(cache_key)
                 try:
                     redis_data = redis_data.decode("utf-8")
                 except:
