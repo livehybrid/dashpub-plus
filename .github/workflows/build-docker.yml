@@ -8,6 +8,8 @@ on:
     branches:
       - develop
       - ws-*
+      # Lets multi-arch Docker changes run CI on PR branches without waiting for develop.
+      - 'feat/**'
 
 jobs:
   build_platform:
@@ -17,31 +19,28 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # ubuntu-latest is amd64: build amd64 natively; use QEMU only for arm64.
+          # `ubuntu-latest` is usually x86_64; QEMU/binfmt is only installed when the target platform
+          # does not match the runner architecture (covers rare arm64-hosted runners too).
           - dockerfile: ./apicache/Dockerfile
             image: livehybrid/dashpub_cacheapi
             image_url: index.docker.io/livehybrid/dashpub_cacheapi
             platform: linux/amd64
             tag_suffix: linux-amd64
-            qemu: "false"
           - dockerfile: ./apicache/Dockerfile
             image: livehybrid/dashpub_cacheapi
             image_url: index.docker.io/livehybrid/dashpub_cacheapi
             platform: linux/arm64
             tag_suffix: linux-arm64
-            qemu: "true"
           - dockerfile: ./screenshotter/Dockerfile
             image: livehybrid/dashpub_screenshotter
             image_url: index.docker.io/livehybrid/dashpub_screenshotter
             platform: linux/amd64
             tag_suffix: linux-amd64
-            qemu: "false"
           - dockerfile: ./screenshotter/Dockerfile
             image: livehybrid/dashpub_screenshotter
             image_url: index.docker.io/livehybrid/dashpub_screenshotter
             platform: linux/arm64
             tag_suffix: linux-arm64
-            qemu: "true"
     permissions:
       packages: write
       contents: read
@@ -49,7 +48,7 @@ jobs:
       id-token: write
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Log in to Docker Hub
         uses: docker/login-action@e92390c5fb421da1463c202d546fed0ec5c39f20
@@ -58,7 +57,9 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Set up QEMU
-        if: matrix.qemu == 'true'
+        # GitHub-hosted linux runners are typically x86_64; building linux/arm64 requires binfmt/qemu.
+        # On rare arm64-hosted runners, the inverse applies for linux/amd64.
+        if: ${{ (runner.arch == 'X64' && contains(matrix.platform, 'arm64')) || (runner.arch == 'ARM64' && contains(matrix.platform, 'amd64')) }}
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
@@ -172,6 +173,9 @@ jobs:
             image_url: index.docker.io/livehybrid/dashpub_screenshotter
     needs: [merge_manifest]
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+
       - name: Set Trivy Image Tag
         id: set-tag
         shell: bash
