@@ -9,6 +9,9 @@ RUN apk add --no-cache \
     harfbuzz \
     ca-certificates \
     ttf-freefont \
+    python3 \
+    make \
+    g++ \
     && rm -rf /var/cache/apk/*
 
     # Manually patch glob in system npm to fix vulnerabilities
@@ -34,6 +37,7 @@ RUN mkdir -p /app
 
 COPY ./screenshotter/package.json /app/package.json
 COPY ./screenshotter/index.js /app/index.js
+RUN npm install -g node-gyp@^11.5.0
 RUN cd /app && yarn install
 
 COPY ./screenshotter/cron.sh /cron.sh
