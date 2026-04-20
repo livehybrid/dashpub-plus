@@ -28,18 +28,46 @@ RUN apt-get update \
     libxrandr2 \
   && rm -rf /var/lib/apt/lists/*
 
+# Keep the bundled npm reasonably current — Trivy flags HIGH findings in npm's own dependency tree
+# (notably `picomatch` via `tinyglobby`) which are not controlled by this service's tiny dependency set.
+RUN npm install -g npm@11.12.1
+
+# npm bundles a nested picomatch used by tinyglobby; bump it explicitly for scanners/audits.
+RUN mkdir -p /tmp/picomatch-fix && \
+    cd /tmp/picomatch-fix && \
+    npm init -y >/dev/null 2>&1 && \
+    npm install picomatch@^4.0.4 >/dev/null 2>&1 && \
+    target="/usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch" && \
+    if [ -d "$target" ]; then \
+      rm -rf "$target" && \
+      cp -r node_modules/picomatch "$target"; \
+    fi && \
+    rm -rf /tmp/picomatch-fix
+
 # Manually patch glob in system npm to fix vulnerabilities
 RUN mkdir -p /tmp/glob-fix && \
-  cd /tmp/glob-fix && \
-  npm init -y && \
-  npm install glob@^10.5.0 && \
-  rm -rf /usr/local/lib/node_modules/npm/node_modules/glob && \
-  cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/ && \
-  if [ -d "/usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob" ]; then \
-    rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob && \
-    cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/; \
+    cd /tmp/glob-fix && \
+    npm init -y && \
+    npm install glob@^10.5.0 && \
+    rm -rf /usr/local/lib/node_modules/npm/node_modules/glob && \
+    cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/ && \
+    if [ -d "/usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob" ]; then \
+      rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob && \
+      cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/; \
+    fi && \
+    rm -rf /tmp/glob-fix
+
+# npm bundles a nested picomatch used by tinyglobby; bump it explicitly for scanners/audits.
+RUN mkdir -p /tmp/picomatch-fix && \
+  cd /tmp/picomatch-fix && \
+  npm init -y >/dev/null 2>&1 && \
+  npm install picomatch@^4.0.4 >/dev/null 2>&1 && \
+  target="/usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch" && \
+  if [ -d "$target" ]; then \
+    rm -rf "$target" && \
+    cp -r node_modules/picomatch "$target"; \
   fi && \
-  rm -rf /tmp/glob-fix
+  rm -rf /tmp/picomatch-fix
 
 # Set environment variables for Chromium
 ENV CHROME_BIN=/usr/bin/chromium \
