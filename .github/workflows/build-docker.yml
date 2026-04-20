@@ -69,7 +69,14 @@ jobs:
           if [[ "${{ github.event_name }}" == "release" && "${{ github.event.action }}" == "published" ]]; then
             echo "image_tag=latest" >> "$GITHUB_OUTPUT"
           else
-            echo "image_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            raw="${GITHUB_REF_NAME//$'\r'/}"
+            safe="$(printf '%s' "${raw}" | tr '[:upper:]' '[:lower:]' | tr '/' '-' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
+            safe="${safe:0:120}"
+            if [[ -z "${safe}" ]]; then
+              short_sha="${GITHUB_SHA::12}"
+              safe="git-${short_sha}"
+            fi
+            echo "image_tag=${safe}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Extract metadata (tags, labels) for Docker
@@ -130,7 +137,14 @@ jobs:
           if [[ "${{ github.event_name }}" == "release" && "${{ github.event.action }}" == "published" ]]; then
             echo "image_tag=latest" >> "$GITHUB_OUTPUT"
           else
-            echo "image_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+            raw="${GITHUB_REF_NAME//$'\r'/}"
+            safe="$(printf '%s' "${raw}" | tr '[:upper:]' '[:lower:]' | tr '/' '-' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
+            safe="${safe:0:120}"
+            if [[ -z "${safe}" ]]; then
+              short_sha="${GITHUB_SHA::12}"
+              safe="git-${short_sha}"
+            fi
+            echo "image_tag=${safe}" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Create and push multi-arch manifest
@@ -158,7 +172,20 @@ jobs:
     steps:
       - name: Set Trivy Image Tag
         id: set-tag
-        run: echo "image_tag=${{ github.event_name == 'release' && github.event.action == 'published' && 'latest' || github.ref_name }}" >> $GITHUB_ENV
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "release" && "${{ github.event.action }}" == "published" ]]; then
+            echo "image_tag=latest" >> "$GITHUB_ENV"
+          else
+            raw="${GITHUB_REF_NAME//$'\r'/}"
+            safe="$(printf '%s' "${raw}" | tr '[:upper:]' '[:lower:]' | tr '/' '-' | sed -E 's/[^a-z0-9._-]+/-/g; s/^-+//; s/-+$//')"
+            safe="${safe:0:120}"
+            if [[ -z "${safe}" ]]; then
+              short_sha="${GITHUB_SHA::12}"
+              safe="git-${short_sha}"
+            fi
+            echo "image_tag=${safe}" >> "$GITHUB_ENV"
+          fi
       
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
