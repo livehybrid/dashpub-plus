@@ -1,4 +1,5 @@
-FROM node:24-bookworm-slim
+# Pull via AWS Public ECR mirror to avoid Docker Hub anonymous rate limits in CI.
+FROM public.ecr.aws/docker/library/node:24-bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 

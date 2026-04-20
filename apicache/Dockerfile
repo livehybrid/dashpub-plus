@@ -1,4 +1,5 @@
-FROM python:3.13-slim-bookworm
+# Pull via AWS Public ECR mirror to avoid Docker Hub anonymous rate limits in CI.
+FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
