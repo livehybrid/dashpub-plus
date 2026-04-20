@@ -1,14 +1,10 @@
-# Pull via AWS Public ECR mirror to avoid Docker Hub anonymous rate limits in CI.
-FROM public.ecr.aws/docker/library/python:3.13-slim-bookworm
+# Alpine (musl) — project preference. Mirror reduces Docker Hub anonymous rate limits in CI.
+FROM public.ecr.aws/docker/library/python:3.13-alpine
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install system dependencies
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-    build-essential \
+RUN apk update && apk upgrade -a && apk add --no-cache \
+    build-base \
     libffi-dev \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/cache/apk/*
 
 WORKDIR /code
 
@@ -19,4 +15,4 @@ RUN pip install setuptools
 
 COPY ./apicache/app /code/app
 
-CMD ["gunicorn", "--conf", "app/gunicorn_conf.py", "--bind", "0.0.0.0:80", "app.main:app"] 
+CMD ["gunicorn", "--conf", "app/gunicorn_conf.py", "--bind", "0.0.0.0:80", "app.main:app"]
