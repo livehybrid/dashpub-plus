@@ -1,11 +1,13 @@
-FROM python:3.15.0a3-alpine
+FROM python:3.13-slim-bookworm
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    build-essential \
     libffi-dev \
-    && rm -rf /var/cache/apk/*
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /code
 
