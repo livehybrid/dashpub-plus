@@ -1,13 +1,12 @@
 name: Publish Docker image
 
 on:
+  workflow_dispatch:
   release:
     types: [published]
   push:
     branches:
       - develop
-      # Match dashpub: validate multi-arch Docker builds on long-lived feature branches.
-      - 'feat/**'
       - ws-*
 
 jobs:
