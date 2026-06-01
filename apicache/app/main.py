@@ -32,6 +32,7 @@ redis_host = os.environ.get("REDIS_HOST","redis-node-0")
 redis_user = os.environ.get("REDIS_USER", None)
 redis_pass = os.environ.get("REDIS_PASS", None)
 redis_ssl = os.environ.get("REDIS_SSL", False)
+redis_cluster = os.environ.get("REDIS_CLUSTER", "true").lower() not in ("false", "0", "no")
 
 dashpub_host = os.environ.get("DASHPUB_HOST","dashpub")
 dashpub_port = os.environ.get("DASHPUB_PORT", 3000)
@@ -54,47 +55,55 @@ def get_cache_key(path):
 print(f"Connecting to redis host={redis_host}")
 
 try:
-    # Connect to Redis cluster using the primary node
-    # Add retry logic for cluster initialization
     max_retries = 5
     retry_delay = 10
-    
+
     for attempt in range(max_retries):
         try:
-            print(f"Attempting to connect to Redis cluster (attempt {attempt + 1}/{max_retries})")
-            
-            r = RedisCluster(
-                host=redis_host,
-                port=redis_port,
-                decode_responses=True,
-                skip_full_coverage_check=True,
-                password=redis_pass,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-                retry_on_timeout=True,
-                health_check_interval=30,
-                cluster_error_retry_attempts=3
-            )
-            
-            # Test the connection and cluster status
-            r.ping()
-            
-            # Check cluster info to ensure it's properly initialized
-            cluster_info = r.cluster_info()
-            print(f"Cluster state: {cluster_info.get('cluster_state', 'unknown')}")
-            print(f"Slots covered: {cluster_info.get('cluster_slots_assigned', 'unknown')}")
-            
-            if cluster_info.get('cluster_state') == 'ok':
-                print("Connected to Redis cluster successfully - cluster is ready!")
-                break
-            else:
-                print(f"Cluster not ready yet, state: {cluster_info.get('cluster_state')}")
-                if attempt < max_retries - 1:
-                    print(f"Waiting {retry_delay} seconds before retry...")
-                    time.sleep(retry_delay)
+            if redis_cluster:
+                print(f"Attempting to connect to Redis cluster (attempt {attempt + 1}/{max_retries})")
+                r = RedisCluster(
+                    host=redis_host,
+                    port=redis_port,
+                    decode_responses=True,
+                    skip_full_coverage_check=True,
+                    password=redis_pass,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30,
+                    cluster_error_retry_attempts=3
+                )
+                r.ping()
+                cluster_info = r.cluster_info()
+                print(f"Cluster state: {cluster_info.get('cluster_state', 'unknown')}")
+                print(f"Slots covered: {cluster_info.get('cluster_slots_assigned', 'unknown')}")
+                if cluster_info.get('cluster_state') == 'ok':
+                    print("Connected to Redis cluster successfully - cluster is ready!")
+                    break
                 else:
-                    raise Exception("Cluster failed to initialize properly after all retries")
-                    
+                    print(f"Cluster not ready yet, state: {cluster_info.get('cluster_state')}")
+                    if attempt < max_retries - 1:
+                        print(f"Waiting {retry_delay} seconds before retry...")
+                        time.sleep(retry_delay)
+                    else:
+                        raise Exception("Cluster failed to initialize properly after all retries")
+            else:
+                print(f"Attempting to connect to standalone Redis (attempt {attempt + 1}/{max_retries})")
+                r = redis.Redis(
+                    host=redis_host,
+                    port=redis_port,
+                    decode_responses=True,
+                    password=redis_pass,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True,
+                    health_check_interval=30,
+                )
+                r.ping()
+                print("Connected to standalone Redis successfully!")
+                break
+
         except Exception as e:
             print(f"Connection attempt {attempt + 1} failed: {e}")
             if attempt < max_retries - 1:
@@ -102,14 +111,15 @@ try:
                 time.sleep(retry_delay)
             else:
                 raise e
-    
+
 except Exception as e:
     traceback.print_exc(file=sys.stdout)
     exc_type, exc_obj, exc_tb = sys.exc_info()
     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
     print(exc_type, fname, exc_tb.tb_lineno)
     print(e)
-    print(f"Cannot connect to Redis cluster on host={redis_host} port={redis_port}")
+    mode = "cluster" if redis_cluster else "standalone"
+    print(f"Cannot connect to Redis {mode} on host={redis_host} port={redis_port}")
     exit(999)
 
 @app.route('/', defaults={'u_path': ''})
