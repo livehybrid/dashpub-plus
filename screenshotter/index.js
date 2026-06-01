@@ -8,7 +8,7 @@ const url = "http://"+process.env.NGINX_HOST+":"+process.env.NGINX_PORT;
 (async () => {
     let browser = "";
     try {
-        const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser';
+        const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium';
         browser = await puppeteer.launch({
             args: [
                 '--no-sandbox',
