@@ -1,5 +1,5 @@
 # Alpine (musl) — project preference. Mirror reduces Docker Hub anonymous rate limits in CI.
-FROM public.ecr.aws/docker/library/node:24-alpine
+FROM public.ecr.aws/docker/library/node:26-alpine
 
 RUN apk update && apk upgrade -a && apk add --no-cache \
     ca-certificates \
