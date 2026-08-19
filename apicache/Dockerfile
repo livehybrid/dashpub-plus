@@ -1,11 +1,10 @@
-FROM python:3.15.0a2-alpine
+# Alpine (musl) — project preference. Mirror reduces Docker Hub anonymous rate limits in CI.
+FROM public.ecr.aws/docker/library/python:3.13-alpine
 
-# Install system dependencies
-RUN apk add --no-cache \
-    gcc \
-    musl-dev \
+RUN apk update && apk upgrade -a && apk add --no-cache \
+    build-base \
     libffi-dev \
-    && rm -rf /var/cache/apk/*
+  && rm -rf /var/cache/apk/*
 
 
 # Create a non-root user and group
