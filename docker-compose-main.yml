@@ -74,7 +74,7 @@ services:
     #     splunk-verify-connection: "false"
 
   redis-node-0:
-    image: redis:8.4-alpine
+    image: redis:8.8-alpine
     command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1", "--cluster-announce-ip", "redis-node-0", "--cluster-announce-port", "6379"]
     volumes:
       - redis-node-0-data:/data
@@ -87,7 +87,7 @@ services:
       io.rancher.container.pull_image: always
 
   redis-node-1:
-    image: redis:8.4-alpine
+    image: redis:8.8-alpine
     command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1", "--cluster-announce-ip", "redis-node-1", "--cluster-announce-port", "6379"]
     volumes:
       - redis-node-1-data:/data
@@ -100,7 +100,7 @@ services:
       io.rancher.container.pull_image: always
 
   redis-node-2:
-    image: redis:8.4-alpine
+    image: redis:8.8-alpine
     command: ["redis-server", "--port", "6379", "--cluster-enabled", "yes", "--cluster-config-file", "nodes.conf", "--cluster-node-timeout", "5000", "--appendonly", "yes", "--bind", "0.0.0.0", "--requirepass", "TestPassword1", "--cluster-announce-ip", "redis-node-2", "--cluster-announce-port", "6379"]
     volumes:
       - redis-node-2-data:/data
@@ -113,7 +113,7 @@ services:
       io.rancher.container.pull_image: always
 
   redis-cluster-init:
-    image: redis:8.4-alpine
+    image: redis:8.8-alpine
     depends_on:
       - redis-node-0
       - redis-node-1
