@@ -7,7 +7,7 @@
   "license": "MIT",
   "scripts": {},
   "dependencies": {
-    "picomatch": "4.0.5",
+    "picomatch": "4.0.7",
     "puppeteer": "^25.3.0",
     "puppeteer-core": "^25.3.0"
   }
