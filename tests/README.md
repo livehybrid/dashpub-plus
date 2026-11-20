@@ -32,6 +32,10 @@ that are not a major version bump; GitHub merges them when the required checks
 `develop` requiring those checks. Without it `gh pr merge --auto` merges
 immediately, so if the protection is ever removed, disable that workflow first.
 
+A merge made by auto-merge does not trigger other workflows, so the publish
+workflow does not run for it. `publish-catch-up.yml` checks hourly whether the
+head of `develop` has a publish run and starts one if not.
+
 What this does not cover: a real dashpub and a real Splunk. That is the render
 suite in the dashpub repository, which also asserts the `.url2png-cheese`
 marker the screenshotter waits for.
