@@ -1,0 +1,182 @@
+name: CI
+
+# Tests the three images this repository builds, on every pull request and on
+# develop. Nothing here needs a secret or pushes anything, so Dependabot and
+# fork pull requests get the same checks. See tests/README.md.
+#
+# The first three jobs are the required checks on develop, and are what lets
+# a dependency update merge itself (dependabot-auto-merge.yml).
+
+on:
+  pull_request:
+  push:
+    branches:
+      - develop
+  schedule:
+    # Mondays 05:41 UTC: catches a moved base image when nobody has opened a
+    # pull request.
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
+
+permissions:
+  contents: read
+
+jobs:
+  cacheapi:
+    name: Cache API (${{ matrix.redis }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Production runs against a Redis cluster; the simple compose file can
+        # run standalone. The client code paths differ, so both are tested.
+        redis: [standalone, cluster]
+    env:
+      REDIS_MODE: ${{ matrix.redis }}
+      REDIS_CLUSTER: ${{ matrix.redis == 'cluster' }}
+      COMPOSE_FILE: tests/docker-compose.yml
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build and start the stack
+        run: |
+          # Image pulls from public registries are rate limited per runner IP and
+          # fail now and then ("toomanyrequests"). That is not a test result.
+          for attempt in 1 2 3 4; do
+            if docker compose up -d --build dashpub "redis-${REDIS_MODE}" app nginx; then break; fi
+            if [ "$attempt" = 4 ]; then echo "::error::still failing after 4 attempts"; exit 1; fi
+            echo "::warning::attempt ${attempt} failed, retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
+
+      - name: Wait for the cache API and nginx
+        run: |
+          for url in http://127.0.0.1:3000/ http://127.0.0.1:8080/ http://127.0.0.1:3001/; do
+            for attempt in $(seq 1 60); do
+              curl -fsS -o /dev/null "$url" && break
+              if [ "$attempt" = 60 ]; then
+                echo "::error::${url} did not answer within 2 minutes"
+                docker compose ps
+                docker compose logs --tail 80
+                exit 1
+              fi
+              sleep 2
+            done
+            echo "${url} is up"
+          done
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+
+      - name: Run the tests
+        env:
+          CACHEAPI_URL: http://127.0.0.1:8080
+          STUB_URL: http://127.0.0.1:3000
+          NGINX_URL: http://127.0.0.1:3001
+        run: |
+          pip install --quiet pytest
+          pytest tests -v
+
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --tail 200
+
+  screenshotter:
+    name: Screenshotter
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      COMPOSE_FILE: tests/docker-compose.yml
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the screenshotter image
+        run: |
+          # Image pulls from public registries are rate limited per runner IP and
+          # fail now and then ("toomanyrequests"). That is not a test result.
+          for attempt in 1 2 3 4; do
+            if docker build -f screenshotter/Dockerfile -t dashpub-plus-screenshotter:test .; then break; fi
+            if [ "$attempt" = 4 ]; then echo "::error::still failing after 4 attempts"; exit 1; fi
+            echo "::warning::attempt ${attempt} failed, retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
+
+      - name: Start the stub dashpub
+        run: |
+          for pull in 1 2 3 4; do
+            docker compose up -d dashpub && break
+            [ "$pull" = 4 ] && exit 1
+            sleep $((pull * 30))
+          done
+          for attempt in $(seq 1 30); do
+            curl -fsS -o /dev/null http://127.0.0.1:3000/ && exit 0
+            sleep 1
+          done
+          docker compose logs dashpub
+          exit 1
+
+      - name: Take one round of screenshots
+        run: |
+          mkdir -p shots && chmod 777 shots
+          network="$(docker inspect -f '{{range $name, $_ := .NetworkSettings.Networks}}{{$name}}{{end}}' "$(docker compose ps -q dashpub)")"
+          # One pass of the same script the container loops over (cron.sh).
+          docker run --rm --network "$network" \
+            -e NGINX_HOST=dashpub -e NGINX_PORT=3000 \
+            -v "$PWD/shots:/dashpub/screenshots" \
+            --entrypoint node dashpub-plus-screenshotter:test /app/index.js
+
+      - name: Check the screenshots
+        run: python3 tests/check_screenshots.py shots
+
+      - name: Upload the screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: screenshots
+          path: shots/
+          retention-days: 14
+
+  image-scan:
+    name: Image scan (${{ matrix.name }})
+    # Reports on the images this commit would publish. Not a required check: a
+    # CVE published overnight in a base image is not caused by the pull request
+    # it happens to land on, and must not block unrelated updates.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: cacheapi
+            dockerfile: apicache/Dockerfile
+          - name: screenshotter
+            dockerfile: screenshotter/Dockerfile
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image
+        run: |
+          # Image pulls from public registries are rate limited per runner IP and
+          # fail now and then ("toomanyrequests"). That is not a test result.
+          for attempt in 1 2 3 4; do
+            if docker build -f "${{ matrix.dockerfile }}" -t "scan-${{ matrix.name }}:test" .; then break; fi
+            if [ "$attempt" = 4 ]; then echo "::error::still failing after 4 attempts"; exit 1; fi
+            echo "::warning::attempt ${attempt} failed, retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
+
+      - name: Scan for fixable CRITICAL and HIGH vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: scan-${{ matrix.name }}:test
+          format: table
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH

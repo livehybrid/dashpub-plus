@@ -1,0 +1,56 @@
+# Test stack: the real cache API and nginx images, a real Redis, and
+# tests/stub_upstream.py standing in for dashpub. Used by
+# .github/workflows/ci.yml; see tests/README.md to run it by hand.
+#
+#   REDIS_MODE=standalone docker compose -f tests/docker-compose.yml up -d --build dashpub redis-standalone app nginx
+#   REDIS_MODE=cluster    docker compose -f tests/docker-compose.yml up -d --build dashpub redis-cluster    app nginx
+services:
+  # Named `dashpub` because that is the host name nginx/public.conf and the
+  # cache API's default configuration expect.
+  dashpub:
+    image: public.ecr.aws/docker/library/python:3.13-alpine
+    command: ["python", "/stub/stub_upstream.py"]
+    volumes:
+      - ./stub_upstream.py:/stub/stub_upstream.py:ro
+    ports:
+      - "3000:3000"
+
+  redis-standalone:
+    image: public.ecr.aws/docker/library/redis:8-alpine
+
+  # A one-node cluster owning every slot: enough to exercise the RedisCluster
+  # client path, which is what production uses.
+  redis-cluster:
+    image: public.ecr.aws/docker/library/redis:8-alpine
+    command:
+      - sh
+      - -c
+      - |
+        redis-server --cluster-enabled yes --appendonly no &
+        until redis-cli ping >/dev/null 2>&1; do sleep 0.2; done
+        redis-cli cluster addslotsrange 0 16383
+        wait
+
+  app:
+    build:
+      context: ..
+      dockerfile: apicache/Dockerfile
+    image: dashpub-plus-cacheapi:test
+    environment:
+      DASHPUB_HOST: dashpub
+      DASHPUB_PORT: "3000"
+      REDIS_HOST: redis-${REDIS_MODE:-standalone}
+      REDIS_CLUSTER: ${REDIS_CLUSTER:-false}
+    ports:
+      - "8080:8080"
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: nginx/Dockerfile
+    image: dashpub-plus-nginx:test
+    ports:
+      - "3001:3001"
+    depends_on:
+      - app
+      - dashpub

@@ -48,6 +48,14 @@ CACHE_EXCLUDE_PATHS = [
 CACHE_KEY_PREFIX = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(6))
 print(f"Cache key prefix: {CACHE_KEY_PREFIX}")
 
+# How long an upstream error (4xx/5xx) is remembered. Long enough that a failing
+# upstream is not hit by every viewer at once, short enough that the error is
+# gone soon after upstream recovers.
+ERROR_CACHE_SECONDS = 15
+
+def is_error(status):
+    return status >= 400
+
 def get_cache_key(path):
     """Get the prefixed cache key for a given path."""
     return f"{CACHE_KEY_PREFIX}:{path}"
@@ -151,7 +159,7 @@ def catch_all(u_path):
             resp = requests.get(url, timeout=60)
             response = make_response(resp.content.decode("utf-8"))
             response.headers['cache-control'] = "s-maxage=60, stale-while-revalidate"
-            response.status_code = 200
+            response.status_code = resp.status_code
             log_resp(start_time, u_path, oidc_email, "Cache excluded path, serving direct response")
             return response
         
@@ -170,7 +178,11 @@ def catch_all(u_path):
                     url = f"http://{dashpub_host}:{dashpub_port}/{u_path}"
                     resp = requests.get(url, timeout=60)
                     cache_time=300
-                    if 'cache-control' in resp.headers:
+                    if is_error(resp.status_code):
+                        # Never trust an error for as long as a result, whatever
+                        # cache header upstream put on it.
+                        cache_time=ERROR_CACHE_SECONDS
+                    elif 'cache-control' in resp.headers:
                         #log_resp(start_time, u_path, oidc_email, f"Got cache headers={resp.headers['cache-control']}")
                         z = re.match("s-maxage=([0-9]+)", resp.headers['cache-control'])
                         if z:
@@ -178,12 +190,15 @@ def catch_all(u_path):
                     #print(f"Setting TTL to {cache_time}")
 
                     redis_data['value'] = resp.content.decode("utf-8")
+                    # The status travels with the body, so a cached error is still
+                    # an error when it is served again.
+                    redis_data['status'] = resp.status_code
                     r.set(cache_key, json.dumps(redis_data))
                     r.expire(cache_key,cache_time)
-                    log_resp(start_time, u_path, oidc_email, f"cache_time={cache_time}")
+                    log_resp(start_time, u_path, oidc_email, f"status={resp.status_code} cache_time={cache_time}")
                     response = make_response(redis_data['value'])
                     response.headers['cache-control'] = f"s-maxage={cache_time}, stale-while-revalidate"
-                    response.status_code = 200
+                    response.status_code = resp.status_code
                     return response
                 elif json.loads(redis_data)['value'] == "Pending":
                     #print("Waiting for data...sleeping...")
@@ -197,7 +212,8 @@ def catch_all(u_path):
                     redis_data = json.loads(redis_data)
                     response = make_response(redis_data['value'])
                     response.headers['cache-control'] = f"s-maxage={cache_time}, stale-while-revalidate"
-                    response.status_code = 200
+                    # Entries written before the status was stored have none: they were all served as 200.
+                    response.status_code = redis_data.get('status', 200)
                     log_resp(start_time, u_path, oidc_email, f"Sending cached response with ttl={cache_time}")
                     return response
             except redis.exceptions.SlotNotCoveredError as e:
@@ -207,7 +223,7 @@ def catch_all(u_path):
                 resp = requests.get(url, timeout=60)
                 response = make_response(resp.content.decode("utf-8"))
                 response.headers['cache-control'] = "s-maxage=300, stale-while-revalidate"
-                response.status_code = 200
+                response.status_code = resp.status_code
                 log_resp(start_time, u_path, oidc_email, "Redis cluster error, serving direct response")
                 return response
             except Exception as e:
@@ -217,7 +233,7 @@ def catch_all(u_path):
                 resp = requests.get(url, timeout=60)
                 response = make_response(resp.content.decode("utf-8"))
                 response.headers['cache-control'] = "s-maxage=300, stale-while-revalidate"
-                response.status_code = 200
+                response.status_code = resp.status_code
                 log_resp(start_time, u_path, oidc_email, "Redis error, serving direct response")
                 return response
     elif u_path.startswith("olly/"):

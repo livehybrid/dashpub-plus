@@ -1,5 +1,5 @@
 # Alpine (musl) — project preference. Mirror reduces Docker Hub anonymous rate limits in CI.
-FROM public.ecr.aws/docker/library/python:3.13-alpine
+FROM public.ecr.aws/docker/library/python:3.15-alpine
 
 RUN apk update && apk upgrade -a && apk add --no-cache \
     build-base \
@@ -16,8 +16,12 @@ WORKDIR /code
 # Copy requirements
 COPY ./apicache/requirements.txt /code/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-RUN pip install setuptools
+# pip (and the msgpack and urllib3 it vendors) and the base image's old
+# setuptools are only needed to install. Nothing imports them at runtime, and
+# left in the image they are a standing source of scanner findings, so they
+# are taken out once the requirements are in.
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt \
+  && python -m pip uninstall -y setuptools pip
 
 # Copy application code
 COPY ./apicache/app /code/app
