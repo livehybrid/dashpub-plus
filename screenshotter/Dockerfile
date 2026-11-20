@@ -8,48 +8,28 @@ RUN apk update && apk upgrade -a && apk add --no-cache \
     freetype \
     harfbuzz \
     ttf-freefont \
-    python3 \
-    make \
-    g++ \
-    pkgconf \
   && rm -rf /var/cache/apk/*
-
-RUN npm install -g npm@11.12.1
-
-RUN mkdir -p /tmp/picomatch-fix && \
-    cd /tmp/picomatch-fix && \
-    npm init -y >/dev/null 2>&1 && \
-    npm install picomatch@^4.0.4 >/dev/null 2>&1 && \
-    target="/usr/local/lib/node_modules/npm/node_modules/tinyglobby/node_modules/picomatch" && \
-    if [ -d "$target" ]; then \
-      rm -rf "$target" && \
-      cp -r node_modules/picomatch "$target"; \
-    fi && \
-    rm -rf /tmp/picomatch-fix
-
-RUN mkdir -p /tmp/glob-fix && \
-    cd /tmp/glob-fix && \
-    npm init -y && \
-    npm install glob@^10.5.0 && \
-    rm -rf /usr/local/lib/node_modules/npm/node_modules/glob && \
-    cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/ && \
-    if [ -d "/usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob" ]; then \
-      rm -rf /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/glob && \
-      cp -r node_modules/glob /usr/local/lib/node_modules/npm/node_modules/node-gyp/node_modules/; \
-    fi && \
-    rm -rf /tmp/glob-fix
 
 ENV CHROME_BIN=/usr/bin/chromium \
     CHROME_PATH=/usr/lib/chromium/ \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_SKIP_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 RUN mkdir -p /app
 
 COPY ./screenshotter/package.json /app/package.json
 COPY ./screenshotter/index.js /app/index.js
-RUN npm install -g node-gyp@^11.5.0
-RUN cd /app && npm install --no-audit --no-fund
+
+# npm is needed to install and never again: the container only ever runs
+# `node /app/index.js`. Removing it removes npm's own bundled dependencies
+# (tar, brace-expansion, pacote, sigstore, ...), which is where every scanner
+# finding in this image has come from. That replaces the previous approach of
+# pinning an npm release and patching its bundled packages one by one.
+RUN cd /app && npm install --no-audit --no-fund --omit=dev \
+  && npm cache clean --force \
+  && rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+            /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /root/.npm
 
 COPY ./screenshotter/cron.sh /cron.sh
 RUN chmod +x /cron.sh
