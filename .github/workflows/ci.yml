@@ -44,7 +44,15 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Build and start the stack
-        run: docker compose up -d --build dashpub "redis-${REDIS_MODE}" app nginx
+        run: |
+          # Image pulls from public registries are rate limited per runner IP and
+          # fail now and then ("toomanyrequests"). That is not a test result.
+          for attempt in 1 2 3 4; do
+            if docker compose up -d --build dashpub "redis-${REDIS_MODE}" app nginx; then break; fi
+            if [ "$attempt" = 4 ]; then echo "::error::still failing after 4 attempts"; exit 1; fi
+            echo "::warning::attempt ${attempt} failed, retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
 
       - name: Wait for the cache API and nginx
         run: |
@@ -89,11 +97,23 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Build the screenshotter image
-        run: docker build -f screenshotter/Dockerfile -t dashpub-plus-screenshotter:test .
+        run: |
+          # Image pulls from public registries are rate limited per runner IP and
+          # fail now and then ("toomanyrequests"). That is not a test result.
+          for attempt in 1 2 3 4; do
+            if docker build -f screenshotter/Dockerfile -t dashpub-plus-screenshotter:test .; then break; fi
+            if [ "$attempt" = 4 ]; then echo "::error::still failing after 4 attempts"; exit 1; fi
+            echo "::warning::attempt ${attempt} failed, retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
 
       - name: Start the stub dashpub
         run: |
-          docker compose up -d dashpub
+          for pull in 1 2 3 4; do
+            docker compose up -d dashpub && break
+            [ "$pull" = 4 ] && exit 1
+            sleep $((pull * 30))
+          done
           for attempt in $(seq 1 30); do
             curl -fsS -o /dev/null http://127.0.0.1:3000/ && exit 0
             sleep 1
@@ -141,7 +161,15 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Build the image
-        run: docker build -f "${{ matrix.dockerfile }}" -t "scan-${{ matrix.name }}:test" .
+        run: |
+          # Image pulls from public registries are rate limited per runner IP and
+          # fail now and then ("toomanyrequests"). That is not a test result.
+          for attempt in 1 2 3 4; do
+            if docker build -f "${{ matrix.dockerfile }}" -t "scan-${{ matrix.name }}:test" .; then break; fi
+            if [ "$attempt" = 4 ]; then echo "::error::still failing after 4 attempts"; exit 1; fi
+            echo "::warning::attempt ${attempt} failed, retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
 
       - name: Scan for fixable CRITICAL and HIGH vulnerabilities
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
