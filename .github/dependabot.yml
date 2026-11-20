@@ -55,8 +55,10 @@ updates:
         - "*"
 
   - package-ecosystem: "github-actions"
+    # "/" is where Dependabot looks for .github/workflows. This used to say
+    # "/github/workflows", which does not exist, so actions were never updated.
     directories:
-      - "/github/workflows"
+      - "/"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
